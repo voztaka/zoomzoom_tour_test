@@ -169,7 +169,7 @@ export class ReservationsService {
 
     if (reservation.status !== 'Pending') {
       throw new HttpException(
-        '승인 상태의 예약이 아닙니다.',
+        '대기 상태의 예약이 아닙니다.',
         HttpStatus.BAD_REQUEST,
       );
     }
