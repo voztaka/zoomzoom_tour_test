@@ -2,6 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import * as moment from 'moment-timezone';
+import { v4 as uuidv4 } from 'uuid';
 import { Reservations } from '../entities/reservations.entity';
 import { CreateReservationDto } from '../dto/create-reservation.dto';
 import { TourProductsService } from './tour-products.service';
@@ -64,7 +65,7 @@ export class ReservationsService {
   }
 
   private generateUniqueToken(): string {
-    return crypto.randomUUID();
+    return uuidv4();
   }
 
   async checkByToken(token: string, sellerId: number): Promise<Reservations> {
