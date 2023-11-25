@@ -33,7 +33,6 @@ export class ReservationsService {
 
     const reservedCount = await this.reservationsRepository.count({
       where: {
-        customer: { id: customerId },
         tourProduct: { id: dto.tourProductId },
         date: dto.date,
         status: In(['Approved']),
