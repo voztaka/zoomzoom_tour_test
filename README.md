@@ -123,7 +123,8 @@ localhost:3000/customers/tour_products/schedule?month=12&year=2023&tour_product_
           // ... 날짜 ...
           "2023-12-30",
           "2023-12-31"
-        ]
+        ],
+        "timezone": "Asia/Seoul"
       }
     ]
   }

@@ -6,6 +6,7 @@ import { TourProducts } from '../entities/tour-products.entity';
 import { ScheduleQueryDto } from '../dto/schedule-query.dto';
 import { Holidays } from '../entities/holidays.entity';
 import { RedisService } from 'src/utils/redis/redis.service';
+import { ScheduleItem } from '../interfaces/schedule-item.interface';
 
 @Injectable()
 export class TourProductsService {
@@ -29,27 +30,33 @@ export class TourProductsService {
   }
 
   async getMonthlySchedule(dto: ScheduleQueryDto): Promise<any> {
-    const cachedSchedule = await this.checkCachedSchedule(
+    let schedule = await this.checkCachedSchedule(
       dto.month,
       dto.year,
       dto.tour_product_id,
     );
-    if (cachedSchedule) {
-      return cachedSchedule;
+
+    if (!schedule) {
+      schedule = await this.fetchScheduleFromDatabase(
+        dto.month,
+        dto.year,
+        dto.tour_product_id,
+      );
+      await this.cacheSchedule(
+        dto.month,
+        dto.year,
+        dto.tour_product_id,
+        schedule,
+      );
+    } else {
+      // 캐시된 데이터를 현재 날짜와 비교하여 필터링
+      const currentTime = this.getCurrentTime(schedule[0].timezone);
+      schedule.forEach((s: ScheduleItem) => {
+        s.availableDates = s.availableDates.filter((date: string) =>
+          moment.tz(date, 'YYYY-MM-DD', s.timezone).isAfter(currentTime, 'day'),
+        );
+      });
     }
-
-    const schedule = await this.fetchScheduleFromDatabase(
-      dto.month,
-      dto.year,
-      dto.tour_product_id,
-    );
-
-    await this.cacheSchedule(
-      dto.month,
-      dto.year,
-      dto.tour_product_id,
-      schedule,
-    );
 
     return schedule;
   }
@@ -131,6 +138,7 @@ export class TourProductsService {
       return {
         tourProductId: tourProduct.id,
         availableDates,
+        timezone,
       };
     });
   }
