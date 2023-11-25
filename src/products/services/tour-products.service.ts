@@ -74,7 +74,36 @@ export class TourProductsService {
     await this.redisService.put(cacheKey, schedule);
   }
 
-  private async fetchScheduleFromDatabase(
+  private isHoliday(
+    date: moment.Moment,
+    holidays: Holidays[],
+    timezone: string,
+  ): boolean {
+    return holidays.some((holiday) => {
+      if (holiday.recurring) {
+        return date.format('dddd') === holiday.day_of_week;
+      } else {
+        return moment.tz(holiday.date, timezone).isSame(date, 'day');
+      }
+    });
+  }
+
+  private generateDateRange(
+    startDate: moment.Moment,
+    endDate: moment.Moment,
+  ): moment.Moment[] {
+    const dates = [];
+    const dateIterator = startDate.clone();
+
+    while (dateIterator.isBefore(endDate)) {
+      dates.push(dateIterator.clone());
+      dateIterator.add(1, 'days');
+    }
+
+    return dates;
+  }
+
+  public async fetchScheduleFromDatabase(
     month: number,
     year: number,
     tour_product_id: number,
@@ -84,62 +113,29 @@ export class TourProductsService {
       relations: ['holidays'],
     });
 
-    const schedules = tourProducts.map((tourProduct) => {
+    return tourProducts.map((tourProduct) => {
       const timezone = tourProduct.timezone;
-      // 시작 날짜를 해당 시간대로 설정
       const startDate = moment.tz({ year, month: month - 1, day: 1 }, timezone);
-      // 해당 시간대의 월 말일로 종료 날짜 설정
       const endDate = moment.tz(startDate, timezone).endOf('month');
+      const currentDateLocal = this.getCurrentTime(tourProduct.timezone);
+      const dateRange = this.generateDateRange(startDate, endDate);
 
-      // 현재 날짜를 해당 시간대로 변환
-      const currentDateLocal = moment.utc().tz(timezone);
+      const availableDates = dateRange
+        .filter(
+          (date) =>
+            date.isAfter(currentDateLocal, 'day') &&
+            !this.isHoliday(date, tourProduct.holidays, timezone),
+        )
+        .map((date) => date.format('YYYY-MM-DD'));
 
       return {
         tourProductId: tourProduct.id,
-        availableDates: this.getAvailableDates(
-          startDate,
-          endDate,
-          tourProduct.holidays || [],
-          currentDateLocal,
-          timezone,
-        ),
+        availableDates,
       };
     });
-
-    return schedules;
   }
 
-  private getAvailableDates(
-    startDate: moment.Moment,
-    endDate: moment.Moment,
-    holidays: Holidays[],
-    currentDateLocal: moment.Moment,
-    timezone: string,
-  ): string[] {
-    const dates = [];
-    const dateIterator = moment.tz(startDate, timezone);
-
-    while (dateIterator.isBefore(endDate)) {
-      const isHoliday = holidays.some((holiday) => {
-        console.log(moment.tz(holiday.date, timezone));
-
-        if (holiday.recurring) {
-          // 요일에 따른 휴일인지 확인
-          return dateIterator.format('dddd') === holiday.day_of_week;
-        } else {
-          // 특정 날짜에 따른 휴일인지 확인
-          return moment.tz(holiday.date, timezone).isSame(dateIterator, 'day');
-        }
-      });
-
-      // 로컬 시간대의 현재/과거 날짜를 제외
-      if (dateIterator.isAfter(currentDateLocal, 'day') && !isHoliday) {
-        dates.push(dateIterator.format('YYYY-MM-DD'));
-      }
-
-      dateIterator.add(1, 'days');
-    }
-
-    return dates;
+  public getCurrentTime(timezone: string) {
+    return moment.utc().tz(timezone);
   }
 }
