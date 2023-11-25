@@ -18,8 +18,8 @@
 1. **Repository 복제**
 
    ```
-   $ git clone url
-   $ cd name
+   $ git clone https://github.com/voztaka/zoomzoom_tour_test.git
+   $ cd zoomzoom_tour_test
    ```
 
 2. **모듈 설치**
