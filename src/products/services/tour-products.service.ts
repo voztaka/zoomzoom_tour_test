@@ -71,7 +71,7 @@ export class TourProductsService {
     schedule: any,
   ): Promise<void> {
     const cacheKey = `schedule:${tourProductId}:${year}-${month}`;
-    await this.redisService.put(cacheKey, schedule, 3600);
+    await this.redisService.put(cacheKey, schedule);
   }
 
   private async fetchScheduleFromDatabase(
