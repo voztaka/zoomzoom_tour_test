@@ -10,11 +10,12 @@ export class SellersHolidaysController {
   constructor(private readonly holidaysService: HolidaysService) {}
 
   @Post()
-  createHoliday(
+  async createHoliday(
     @Body() createHolidayDto: CreateHolidayDto,
     @Req() req: UserRequest,
   ) {
     const sellerId = Number(req.user.id);
-    return this.holidaysService.createHoliday(createHolidayDto, sellerId);
+    await this.holidaysService.createHoliday(createHolidayDto, sellerId);
+    return { message: '휴일 추가 성공' };
   }
 }

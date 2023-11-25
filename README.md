@@ -54,7 +54,7 @@
 6. **서버 실행**
    - 개발망으로 서버를 실행합니다.
    ```
-   yarn start:dev
+   $ yarn start:dev
    ```
 
 ## API 문서
@@ -295,15 +295,7 @@ POST /sellers/holidays
   {
     "success": true,
     "data": {
-      "date": "2023-12-16",
-      "recurring": false,
-      "tourProduct": {
-        "id": 1
-      },
-      "day_of_week": null,
-      "id": 3,
-      "created_at": "2023-11-24T07:28:14.000Z",
-      "updated_at": "2023-11-24T07:28:14.000Z"
+      "message": "휴일 추가 성공"
     }
   }
   ```

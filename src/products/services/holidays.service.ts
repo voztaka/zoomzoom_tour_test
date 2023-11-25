@@ -16,10 +16,7 @@ export class HolidaysService {
     private tourProductsService: TourProductsService,
   ) {}
 
-  async createHoliday(
-    dto: CreateHolidayDto,
-    sellerId: number,
-  ): Promise<Holidays> {
+  async createHoliday(dto: CreateHolidayDto, sellerId: number): Promise<void> {
     if ((dto.date && dto.dayOfWeek) || (!dto.date && !dto.dayOfWeek)) {
       throw new HttpException(
         'date 또는 dayOfWeek 중 하나만 필수로 입력하여야 합니다.',
@@ -72,7 +69,7 @@ export class HolidaysService {
     // reset cache
     await this.resetScheduleCache(dto.tourProductId);
 
-    return this.holidaysRepository.save(holiday);
+    await this.holidaysRepository.save(holiday);
   }
 
   private async resetScheduleCache(tourProductId: number): Promise<void> {
